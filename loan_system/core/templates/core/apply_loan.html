@@ -1,0 +1,22 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h3>Apply for a Loan</h3>
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Apply for a Loan</h5>
+    <p class="text-muted">Your loan limit is <strong>KES {{ loan_limit }}</strong></p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="amount">Loan Amount</label>
+        <input type="number" class="form-control" name="amount" required>
+      </div>
+      <div class="mb-3">
+        <label for="purpose">Loan Purpose</label>
+        <input type="text" class="form-control" name="purpose" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Application</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

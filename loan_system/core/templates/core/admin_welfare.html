@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Welfare Contributions Overview</h3>
+
+  <form method="get" class="row mb-4 g-2">
+    <div class="col-md-3">
+      <input type="text" name="user" class="form-control" placeholder="Search by username" value="{{ request.GET.user }}">
+    </div>
+    <div class="col-md-3">
+      <input type="date" name="start_date" class="form-control" value="{{ request.GET.start_date }}">
+    </div>
+    <div class="col-md-3">
+      <input type="date" name="end_date" class="form-control" value="{{ request.GET.end_date }}">
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-success w-100">Apply Filter</button>
+    </div>
+  </form>
+
+  <div class="mb-4">
+    <h5>Total Welfare Contributions: <strong>KES {{ total_amount }}</strong></h5>
+  </div>
+
+  <div class="card mb-5">
+    <div class="card-header bg-success text-white">Monthly Contribution Chart</div>
+    <div class="card-body">
+      <canvas id="welfareChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <table class="table table-striped table-hover">
+    <thead class="table-success">
+      <tr>
+        <th>Username</th>
+        <th>Amount (KES)</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in contributions %}
+      <tr>
+        <td>{{ item.user.username }}</td>
+        <td>{{ item.amount }}</td>
+        <td>{{ item.date_contributed|date:"M d, Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="text-center">No contributions found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Include Chart.js -->
+ <canvas id="welfareChart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const chartLabels = {{ chart_labels|safe }};
+  const chartData = {{ chart_data|safe }};
+
+  const ctx = document.getElementById('welfareChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: 'Welfare Contributions (KES)',
+        data: chartData,
+        backgroundColor: '#198754'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => 'KES ' + ctx.formattedValue } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 300 }
+        }
+      }
+    }
+  });
+</script>
+<div class="chart-container" style="max-width: 500px; margin: auto;">
+  <canvas id="welfareChart"></canvas>
+</div>
+
+{% endblock %}
+

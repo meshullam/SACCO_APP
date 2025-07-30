@@ -1,0 +1,19 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h4>Set Monthly Savings Target</h4>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-success">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="POST">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label for="amount" class="form-label">Target Amount (KES)</label>
+    <input type="number" step="0.01" name="amount" id="amount" class="form-control" value="{{ target.amount|default_if_none:'' }}" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Save Target</button>
+</form>
+{% endblock %}

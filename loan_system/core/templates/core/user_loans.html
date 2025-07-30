@@ -1,0 +1,106 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>My Loan Applications</h3>
+  <!-- Filter Section -->
+<form method="get" class="row mb-4 align-items-center g-2">
+  <div class="col-auto">
+    <label for="status" class="form-label fw-semibold">Filter by Status:</label>
+  </div>
+  <div class="col-md-4">
+    <select name="status" id="status" class="form-select shadow-sm" onchange="this.form.submit()">
+      <option value="PENDING" {% if selected_status == 'PENDING' %}selected{% endif %}>Pending</option>
+      <option value="APPROVED" {% if selected_status == 'APPROVED' %}selected{% endif %}>Approved</option>
+      <option value="REJECTED" {% if selected_status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+      <option value="" {% if not selected_status %}selected{% endif %}>All Loans</option>
+    </select>
+  </div>
+</form>
+
+  <a href="{% url 'apply_loan' %}" class="btn btn-primary btn-lg shadow-sm d-flex align-items-center gap-2" style="border-radius: 12px;">
+    <i class="bi bi-journal-plus fs-5"></i>
+    <span>Apply for a Loan</span>
+  </a>
+</div>
+
+<table class="table table-bordered table-hover align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Amount (KES)</th>
+      <th>Purpose</th>
+      <th>Status</th>
+      <th>Date Applied</th>
+      <th>Due Date</th>
+      <th>Repayment</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for loan in user_loans %}
+    <tr>
+      <td>{{ loan.amount }}</td>
+      <td>{{ loan.purpose }}</td>
+      <td>
+        {% if loan.status == 'APPROVED' %}
+          <span class="badge bg-success">{{ loan.status }}</span>
+        {% elif loan.status == 'REJECTED' %}
+          <span class="badge bg-danger">{{ loan.status }}</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">{{ loan.status }}</span>
+        {% endif %}
+      </td>
+      <td>{{ loan.date_applied|date:"M d, Y" }}</td>
+      <td>{{ loan.due_date|date:"M d, Y" }}</td>
+      <td>
+  {% if loan.status == 'APPROVED' %}
+    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#repayModal{{ loan.id }}">
+      Repay
+    </button>
+
+    <!-- Repayment Modal -->
+    <div class="modal fade" id="repayModal{{ loan.id }}" tabindex="-1" aria-labelledby="repayModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg rounded-4">
+          <div class="modal-header bg-gradient bg-primary text-white">
+            <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i> Repay Loan</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-3">To repay your loan of <strong>KES {{ loan.amount }}</strong>, follow these M-PESA instructions:</p>
+            <ul class="list-group list-group-flush mb-3">
+              <li class="list-group-item">Go to <strong>M-PESA</strong> on your phone</li>
+              <li class="list-group-item">Select <strong>Lipa na M-PESA</strong></li>
+              <li class="list-group-item">Paybill Number: <strong>123456</strong></li>
+              <li class="list-group-item">Account: <strong>{{ request.user.username }}</strong></li>
+              <li class="list-group-item">Amount: <strong>KES {{ loan.amount }}</strong></li>
+            </ul>
+            <div class="alert alert-info small">
+              After completing payment, the admin will verify and update your loan status.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <span class="text-muted">—</span>
+  {% endif %}
+</td>
+
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6" class="text-center text-muted">No loan applications found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+{% endblock %}
+
+
+
+
+
+
+
+

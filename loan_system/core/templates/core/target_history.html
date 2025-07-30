@@ -1,0 +1,22 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h4>Monthly Savings Target History</h4>
+<table class="table table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>Month</th>
+      <th>Year</th>
+      <th>Target (KES)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in targets %}
+    <tr>
+      <td>{{ t.month|get_month_name }}</td>
+      <td>{{ t.year }}</td>
+      <td>{{ t.amount }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

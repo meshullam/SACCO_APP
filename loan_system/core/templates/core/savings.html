@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<h4 class="mb-3">My Savings</h4>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-success">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<p><strong>Total Saved:</strong> {{ total_savings }} KES</p>
+
+<form method="POST" class="mt-4">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label for="amount" class="form-label">Enter Amount to Save (KES):</label>
+    <input type="number" name="amount" id="amount" class="form-control" min="10" required>
+  </div>
+  <button type="submit" class="btn btn-success">
+    <i class="bi bi-phone"></i> Proceed to M-PESA
+  </button>
+</form>
+
+{% endblock %}

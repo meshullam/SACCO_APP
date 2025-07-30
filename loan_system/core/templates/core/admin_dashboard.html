@@ -1,0 +1,204 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="container-fluid" style="max-width: 1000px;">
+
+<h4 class="fw-bold mb-3">Admin Dashboard</h4>
+
+<h4 class="mb-3">Loan Statistics</h4>
+<div class="row g-3 mb-3">
+  {% for item in loan_counts %}
+    <div class="col-md-4 col-sm-6">
+      <div class="card shadow-sm h-100 border-start-0 border-4 
+        {% if item.status == 'PENDING' %}border-warning
+        {% elif item.status == 'APPROVED' %}border-success
+        {% elif item.status == 'REJECTED' %}border-danger
+        {% endif %}">
+        <div class="card-body py-2 px-3">
+          <h6 class="card-title small text-muted mb-1">{{ item.status|title }} Loans</h6>
+          <p class="fs-5 fw-semibold mb-0">{{ item.count }}</p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<h5 class="text-center mb-3">Loan Status Overview</h5>
+<div class="d-flex justify-content-center mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h6 class="text-center">Loan Status (Count)</h6>
+      <canvas id="loanStatusChart" style="max-height: 250px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Bar Chart -->
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h6 class="text-center">Loan Status (Amount)</h6>
+      <canvas id="loanAmountChart" style="max-height: 250px;"></canvas>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Doughnut Chart - Loan Count
+    const ctx1 = document.getElementById('loanStatusChart');
+    const loanCountData = {
+      labels: [
+        {% for item in loan_counts %}
+          "{{ item.status|escapejs }}"{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Loan Count',
+        data: [
+          {% for item in loan_counts %}
+            {{ item.count }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: ['#ffc107', '#198754', '#dc3545'],
+      }]
+    };
+    new Chart(ctx1, {
+      type: 'doughnut',
+      data: loanCountData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+
+    // Bar Chart - Loan Amount
+    const ctx2 = document.getElementById('loanAmountChart');
+    const loanAmountData = {
+      labels: [
+        {% for item in loan_amounts %}
+          "{{ item.status|escapejs }}"{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      ],
+      datasets: [{
+        label: 'Total Loan Amount (KES)',
+        data: [
+          {% for item in loan_amounts %}
+            {{ item.total|floatformat:2 }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        ],
+        backgroundColor: ['#ffc107', '#198754', '#dc3545'],
+      }]
+    };
+    new Chart(ctx2, {
+      type: 'bar',
+      data: loanAmountData,
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  });
+</script>
+
+<form method="get" class="mb-3 d-flex align-items-center gap-2">
+  <label for="status" class="form-label mb-0">Filter by status:</label>
+  <select name="status" id="status" class="form-select w-auto">
+    <option value="">All</option>
+    <option value="PENDING" {% if selected_status == "PENDING" %}selected{% endif %}>Pending</option>
+    <option value="APPROVED" {% if selected_status == "APPROVED" %}selected{% endif %}>Approved</option>
+    <option value="REJECTED" {% if selected_status == "REJECTED" %}selected{% endif %}>Rejected</option>
+  </select>
+  <button type="submit" class="btn btn-outline-primary">Filter</button>
+</form>
+{% if all_loans %}
+<div class="table-responsive small">
+<table class="table table-sm table-bordered align-middle">
+
+  <table class="table table-striped">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Amount</th>
+      <th>Purpose</th>
+      <th>Status</th>
+      <th>Date Applied</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for loan in all_loans %}
+    <tr>
+      <td>{{ loan.user.username }}</td>
+      <td>{{ loan.amount }}</td>
+      <td>{{ loan.purpose }}</td>
+      <td>
+        {% if loan.status == 'APPROVED' %}
+          <span class="badge bg-success">Approved</span>
+        {% elif loan.status == 'REJECTED' %}
+          <span class="badge bg-danger">Rejected</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">Pending</span>
+        {% endif %}
+      </td>
+      <td>{{ loan.date_applied|date:"M d, Y H:i" }}</td>
+      <td>
+        {% if loan.status == 'PENDING' %}
+        <form method="post" action="{% url 'approve_loan' loan.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-success">Approve</button>
+        </form>
+        <form method="post" action="{% url 'reject_loan' loan.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-danger">Reject</button>
+        </form>
+        {% else %}
+          <span class="text-muted small">No actions</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="text-center text-muted">No loan records found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</table>
+</div>
+{% else %}
+<div class="alert alert-info mt-3">No {{ selected_status|default:"PENDING" }} loans available.</div>
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('loanChart').getContext('2d');
+  const loanChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ chart_labels|safe }},
+      datasets: [{
+        label: 'Loans by Status',
+        data: {{ chart_data|safe }},
+        backgroundColor: ['#ffc107', '#198754', '#dc3545'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+
+{% endblock %}

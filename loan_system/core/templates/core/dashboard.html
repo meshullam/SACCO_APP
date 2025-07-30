@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="text-center mb-4">
+    <h2 class="fw-bold">My Savings Dashboard</h2>
+    <p class="text-muted">Welcome back, <strong>{{ request.user.username }}</strong> 👋</p>
+  </div>
+
+  <!-- Set Target Button -->
+  <div class="text-center mb-4">
+    <a href="{% url 'set_target' %}" class="btn btn-outline-primary rounded-pill shadow-sm">
+      <i class="bi bi-bullseye"></i> Set / Update Target
+    </a>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="card text-white bg-success shadow rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase">Total Saved</h6>
+          <p class="fs-3">{{ total_savings }} KES</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <div class="card text-white bg-primary shadow rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase">Target</h6>
+          <p class="fs-3">{{ target_savings }} KES</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <div class="card bg-light shadow rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase">Progress</h6>
+          <div class="progress" style="height: 24px;">
+            <div class="progress-bar bg-info" style="width: {{ progress }}%">
+              {{ progress }}%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remaining Target -->
+  <div class="text-center mb-4">
+    <p class="fw-bold text-danger">Remaining to reach target: {{ remaining }} KES</p>
+  </div>
+
+  <!-- Mid-Month Reminder -->
+  {% if mid_month_warning %}
+    <div class="alert alert-warning text-center shadow-sm">
+      <i class="bi bi-exclamation-triangle-fill"></i> You haven’t saved anything this month.
+      Consider saving now to meet your goal!
+    </div>
+  {% endif %}
+
+  <!-- M-PESA Button -->
+  <div class="text-center mb-4">
+    <a href="{% url 'savings' %}" class="btn btn-outline-success btn-lg rounded-pill shadow-sm">
+      <i class="bi bi-phone"></i> Save Now via M-PESA
+    </a>
+  </div>
+
+  <!-- Savings Chart -->
+  <div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-body">
+      <h5 class="text-center">Monthly Savings vs Target</h5>
+      <canvas id="savingsChart" height="180"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById('savingsChart');
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [
+          {
+            label: 'Saved (KES)',
+            backgroundColor: '#198754',
+            data: {{ chart_savings|safe }},
+          },
+          {
+            label: 'Target (KES)',
+            backgroundColor: '#ffc107',
+            data: {{ chart_targets|safe }},
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        },
+        plugins: {
+          legend: {
+            position: 'top'
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}
+
